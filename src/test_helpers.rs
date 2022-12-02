@@ -59,8 +59,6 @@ macro_rules! test_short_input_for_day {
         paste::paste! {
             #[cfg(test)]
             mod [<_day $day _test>] {
-                use crate::PuzzleSolver;
-
                 crate::test_helpers::_test!($day, 1, $part1_expected_val);
                 crate::test_helpers::_test_ignored!($day, 2);
             }
@@ -70,8 +68,6 @@ macro_rules! test_short_input_for_day {
         paste::paste! {
             #[cfg(test)]
             mod [<_day $day _test>] {
-                use crate::PuzzleSolver;
-
                 crate::test_helpers::_test!($day, 1, $part1_expected_val);
                 crate::test_helpers::_test!($day, 2, $part2_expected_val);
             }

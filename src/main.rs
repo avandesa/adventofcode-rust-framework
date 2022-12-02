@@ -1,4 +1,4 @@
-use aoc_2022::{build_solver, PuzzleSolver};
+use aoc_2022::build_solver;
 
 use std::path::PathBuf;
 
