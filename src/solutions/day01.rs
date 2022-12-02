@@ -13,12 +13,12 @@ impl PuzzleSolver for Day01 {
 
     fn part1(&self) -> i128 {
         // Implement a solution to part 1 here
-        todo!()
+        0
     }
 
     fn part2(&self) -> i128 {
-        // Implement a solution to part 1 here
-        todo!()
+        // Implement a solution to part 2 here
+        0
     }
 }
 
