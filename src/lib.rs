@@ -8,6 +8,7 @@ use solutions::*;
 pub fn build_solver(day: u8, input: String) -> Box<dyn PuzzleSolver> {
     match day {
         1 => Box::new(Day01::with_input(input)),
+        2 => Box::new(Day02::with_input(input)),
         // As you produce solutions for other days, add them here
         _ => todo!("Day {day} is not implemented yet"),
     }
