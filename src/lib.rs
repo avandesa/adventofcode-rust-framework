@@ -10,6 +10,7 @@ pub fn build_solver(day: u8, input: String) -> Box<dyn PuzzleSolver> {
         1 => Box::new(Day01::with_input(input)),
         2 => Box::new(Day02::with_input(input)),
         3 => Box::new(Day03::with_input(input)),
+        4 => Box::new(Day04::with_input(input)),
         // As you produce solutions for other days, add them here
         _ => todo!("Day {day} is not implemented yet"),
     }
@@ -33,3 +34,12 @@ pub trait PuzzleSolver {
         todo!()
     }
 }
+
+macro_rules! regex {
+    ($re:literal $(,)?) => {{
+        static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
+        RE.get_or_init(|| regex::Regex::new($re).unwrap())
+    }};
+}
+
+pub(crate) use regex;
