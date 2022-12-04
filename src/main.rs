@@ -1,6 +1,7 @@
 use aoc_2022::build_solver;
 
 use std::path::PathBuf;
+use std::time::Instant;
 
 use clap::ArgGroup;
 use color_eyre::eyre::WrapErr;
@@ -17,14 +18,20 @@ fn main() -> color_eyre::Result<()> {
     let solver = build_solver(args.day, input);
 
     println!("----- Solving part 1 -----");
+    let part1_start = Instant::now();
     let part1 = solver.part1();
+    let part1_duration = part1_start.elapsed();
     println!("--------------------------");
-    println!("Part 1 solution: {}\n", part1);
+    println!("Part 1 solution: {}", part1);
+    println!("Took {:#?}\n", part1_duration);
 
     println!("----- Solving part 2 -----");
+    let part2_start = Instant::now();
     let part2 = solver.part2();
+    let part2_duration = part2_start.elapsed();
     println!("--------------------------");
-    println!("Part 2 solution: {}\n", part2);
+    println!("Part 2 solution: {}", part2);
+    println!("Took {:#?}\n", part2_duration);
 
     Ok(())
 }
