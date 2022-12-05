@@ -1,7 +1,7 @@
 use aoc_2022::build_solver;
 
 use std::path::PathBuf;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use clap::ArgGroup;
 use color_eyre::eyre::WrapErr;
@@ -15,20 +15,19 @@ fn main() -> color_eyre::Result<()> {
 
     let input = std::fs::read_to_string(&input_path)
         .wrap_err_with(|| format!("Failed to open input file: {:#?}", input_path))?;
-    let solver = build_solver(args.day, input);
+
+    println!("Initializing solver");
+    let (solver, solver_duration) = time(|| build_solver(args.day, input));
+    println!("Took {:#?}\n", solver_duration);
 
     println!("----- Solving part 1 -----");
-    let part1_start = Instant::now();
-    let part1 = solver.part1();
-    let part1_duration = part1_start.elapsed();
+    let (part1, part1_duration) = time(|| solver.part1());
     println!("--------------------------");
     println!("Part 1 solution: {}", part1);
     println!("Took {:#?}\n", part1_duration);
 
     println!("----- Solving part 2 -----");
-    let part2_start = Instant::now();
-    let part2 = solver.part2();
-    let part2_duration = part2_start.elapsed();
+    let (part2, part2_duration) = time(|| solver.part2());
     println!("--------------------------");
     println!("Part 2 solution: {}", part2);
     println!("Took {:#?}\n", part2_duration);
@@ -68,4 +67,14 @@ impl Args {
             PathBuf::from(format!("./inputs/day{:02}.txt", self.day))
         }
     }
+}
+
+fn time<F, T>(func: F) -> (T, Duration)
+where
+    F: FnOnce() -> T,
+{
+    let start = Instant::now();
+    let result = func();
+    let duration = start.elapsed();
+    (result, duration)
 }
