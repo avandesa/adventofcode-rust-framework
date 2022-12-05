@@ -22,12 +22,12 @@ pub trait PuzzleSolver {
         Self: Sized;
 
     /// Produce a solution for part 1 of the day's puzzle
-    fn part1(&self) -> i128 {
+    fn part1(&self) -> String {
         todo!()
     }
 
     /// Produce a solution for part 2 of the day's puzzle
-    fn part2(&self) -> i128 {
+    fn part2(&self) -> String {
         todo!()
     }
 }

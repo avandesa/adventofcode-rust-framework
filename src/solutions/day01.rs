@@ -11,16 +11,16 @@ impl PuzzleSolver for Day01 {
         }
     }
 
-    fn part1(&self) -> i128 {
+    fn part1(&self) -> String {
         // Implement a solution to part 1 here
-        0
+        0.to_string()
     }
 
-    fn part2(&self) -> i128 {
+    fn part2(&self) -> String {
         // Implement a solution to part 2 here
-        0
+        0.to_string()
     }
 }
 
 #[cfg(test)]
-crate::test_helpers::test_short_input_for_day!(1, 0, 0);
+crate::test_helpers::test_short_input_for_day!(1, "0", "0");
