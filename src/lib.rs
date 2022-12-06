@@ -12,6 +12,7 @@ pub fn build_solver(day: u8, input: String) -> Box<dyn PuzzleSolver> {
         3 => Box::new(Day03::with_input(input)),
         4 => Box::new(Day04::with_input(input)),
         5 => Box::new(Day05::with_input(input)),
+        6 => Box::new(Day06::with_input(input)),
         // As you produce solutions for other days, add them here
         _ => todo!("Day {day} is not implemented yet"),
     }
