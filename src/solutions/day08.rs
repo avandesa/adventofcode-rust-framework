@@ -1,189 +1,218 @@
 use crate::PuzzleSolver;
 
+use std::fmt::{Display, Formatter, Result as FmtResult};
+
 pub struct Day08 {
-    grid: Grid,
+    grid: Grid<u32>,
 }
 
 impl PuzzleSolver for Day08 {
     fn with_input(input: String) -> Self {
-        let trees = input
-            .chars()
-            .filter_map(|c| c.to_digit(10))
-            .collect::<Vec<_>>();
-
-        let width = input.find('\n').unwrap();
-        let height = trees.len() / width;
-
-        let grid = Grid::new(width, height, trees);
-
-        Self { grid }
+        let size = input.find('\n').unwrap();
+        let contents = input.chars().filter_map(|c| c.to_digit(10)).collect();
+        Self {
+            grid: Grid::new(size, contents),
+        }
     }
 
     fn part1(&self) -> String {
-        self.grid.count_visible().to_string()
+        let mut visibility = self.grid.mapped(|height| VisibilityMarker {
+            height: *height,
+            is_visible: false,
+        });
+
+        visibility.edit_all_directions(mark_visibility);
+
+        visibility
+            .contents
+            .iter()
+            .filter(|v| v.is_visible)
+            .count()
+            .to_string()
     }
 
     fn part2(&self) -> String {
-        todo!()
+        let mut scores = self.grid.mapped(|height| VisibilityScore {
+            height: *height,
+            score: 1,
+        });
+
+        scores.edit_all_directions(count_score);
+
+        println!("{scores}");
+        scores
+            .contents
+            .iter()
+            .map(|s| s.score)
+            .max()
+            .unwrap()
+            .to_string()
     }
 }
 
-fn label_visible(list: &mut [&mut Tree]) {
-    let mut max_seen = 0;
-    for tree in list.iter_mut() {
-        if tree.height > max_seen {
-            tree.is_visible = true
-        }
-        max_seen = u32::max(tree.height, max_seen);
-    }
-    // Now in reverse
-    let mut max_seen = 0;
-    for tree in list.iter_mut().rev() {
-        if tree.height > max_seen {
-            tree.is_visible = true
-        }
-        max_seen = u32::max(tree.height, max_seen);
-    }
-}
-
-#[derive(Default, Debug, Clone, Copy)]
-struct ScenicScore {
-    to_north: Option<u32>,
-    to_east: Option<u32>,
-    to_south: Option<u32>,
-    to_west: Option<u32>,
-}
-
-impl ScenicScore {
-    fn total(&self) -> u32 {
-        self.to_north.expect("north not set")
-            * self.to_east.expect("east not set")
-            * self.to_south.expect("south not set")
-            * self.to_west.expect("west not set")
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-struct Tree {
+#[derive(Clone, Copy, Debug)]
+struct VisibilityMarker {
     height: u32,
     is_visible: bool,
-    scenic_score: ScenicScore,
 }
 
-impl Tree {
-    fn new(height: u32) -> Self {
-        Self {
-            height,
-            is_visible: false,
-            scenic_score: Default::default(),
+fn mark_visibility(row: &mut [VisibilityMarker]) {
+    // Outer trees are always visible
+    row[0].is_visible = true;
+    let mut max_seen = 0;
+    for item in row {
+        if max_seen < item.height {
+            // There are no trees to the left as tall as this one, so it is visible
+            max_seen = item.height;
+            item.is_visible = true;
         }
     }
 }
-#[derive(Debug)]
-struct Grid {
-    width: usize,
-    height: usize,
-    trees: Vec<Tree>,
+
+#[derive(Clone, Copy, Debug)]
+struct VisibilityScore {
+    height: u32,
+    score: u32,
 }
 
-impl Grid {
-    fn new(width: usize, height: usize, trees: Vec<u32>) -> Self {
-        assert_eq!(width * height, trees.len());
-        let trees = trees.into_iter().map(|height| Tree::new(height)).collect();
+fn count_score(row: &mut [VisibilityScore]) {
+    // Ignore outer trees (locks the score at 0 since it's multiplicative)
+    row[0].score = 0;
 
-        let mut grid = Self {
-            width,
-            height,
-            trees,
-        };
-        grid.mark_visibility();
-
-        grid
-    }
-
-    fn mark_visibility(&mut self) {
-        // Mark the top and bottom rows as visible
-        self.row_iter_mut(0).for_each(|tree| tree.is_visible = true);
-        self.row_iter_mut(self.height - 1)
-            .for_each(|tree| tree.is_visible = true);
-
-        // Go row-by-row, skipping the top and bottom rows
-        for row_num in 1..(self.height - 1) {
-            let mut row = self.row_iter_mut(row_num).collect::<Vec<_>>();
-            label_visible(&mut row);
+    // Go through every other tree in the row
+    for current in 1..row.len() {
+        // Starting at the next tree to the right, count how many are visible
+        let mut num_visible = 0;
+        for other_tree in &row[(current + 1)..] {
+            // If the immediate next tree is as tall as this one, then we can only see 1, so we
+            // still increment num_visible and break immediately. Otherwise keep counting until we
+            // reach the end or another tree at least our height
+            num_visible += 1;
+            if other_tree.height >= row[current].height {
+                break;
+            }
         }
-
-        // Mark the left and right columns as visible
-        // left
-        self.column_iter_mut(0)
-            .for_each(|tree| tree.is_visible = true);
-        self.column_iter_mut(self.width - 1)
-            .for_each(|tree| tree.is_visible = true);
-
-        // Go column-by-column
-        for col_num in 1..(self.width - 1) {
-            let mut col = self.column_iter_mut(col_num).collect::<Vec<_>>();
-            label_visible(&mut col);
-        }
-    }
-
-    fn row_iter_mut(&mut self, row: usize) -> impl Iterator<Item = &mut Tree> {
-        assert!(row < self.height);
-        self.trees
-            .iter_mut()
-            .skip(row * self.width)
-            .take(self.width)
-    }
-
-    // Get a mutable iterator over all items in the column
-    fn column_iter_mut(&mut self, col: usize) -> impl Iterator<Item = &mut Tree> {
-        assert!(col < self.width);
-        self.trees.iter_mut().skip(col).step_by(self.width)
-    }
-
-    fn count_visible(&self) -> usize {
-        self.trees.iter().filter(|tree| tree.is_visible).count()
-    }
-
-    fn tree_at(&self, x: usize, y: usize) -> Tree {
-        assert!(x < self.width, "invalid x coordinate {x}");
-        assert!(y < self.height, "invalid y coordinate {y}");
-
-        let idx = x + y * self.width;
-
-        assert!(idx < self.trees.len(), "computed index {idx} out of bounds");
-
-        self.trees[idx]
-    }
-
-    fn tree_at_mut(&mut self, x: usize, y: usize) -> &mut Tree {
-        assert!(x < self.width, "invalid x coordinate {x}");
-        assert!(y < self.height, "invalid y coordinate {y}");
-
-        let idx = x + y * self.width;
-
-        assert!(idx < self.trees.len(), "computed index {idx} out of bounds");
-
-        &mut self.trees[idx]
+        // Multiply the visibility for this view by the current score
+        // If this is the last tree in the row, then the loop is never entered so `num_visible`
+        // remains 0. This has the same effect as the first line by locking outer trees' scores to 0
+        row[current].score *= num_visible as u32;
     }
 }
 
-impl std::fmt::Display for Grid {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let to_write = if self.tree_at(x, y).is_visible {
-                    'Y'
-                } else {
-                    'n'
-                };
-                write!(f, "{}", to_write)?;
+#[derive(Clone, Debug)]
+struct Grid<T: Copy + Display> {
+    size: usize,
+    contents: Vec<T>,
+}
+
+impl<T: Copy + Display> Grid<T> {
+    /// Construct a new grid. Panics if size^2 does not equal the length of contents
+    pub fn new(size: usize, contents: Vec<T>) -> Self {
+        assert_eq!(size * size, contents.len());
+        Self { size, contents }
+    }
+
+    /// Generate a new grid mapping each cell to a new type
+    ///
+    /// Analogous to `Iterator::map`
+    fn mapped<F, O: Copy + Display>(&self, f: F) -> Grid<O>
+    where
+        F: FnMut(&T) -> O,
+    {
+        let contents = self.contents.iter().map(f).collect();
+        Grid::new(self.size, contents)
+    }
+
+    /// Get a mutable slice of the requested row. Panics if row is out of bounds
+    fn row_mut(&mut self, row: usize) -> &mut [T] {
+        assert!(row < self.size);
+        let start = row * self.size;
+        let end = (row + 1) * self.size;
+        &mut self.contents[start..end]
+    }
+
+    /// For each row in the grid, call a function that may edit individual cells
+    fn edit_rows<F>(&mut self, edit_fn: &mut F)
+    where
+        F: FnMut(&mut [T]),
+    {
+        for row in 0..self.size {
+            edit_fn(self.row_mut(row));
+        }
+    }
+
+    /// Calls the given function on each row in the grid, then rotates the whoel grid
+    /// counterclockwise. This is repeated four times. At the end, the grid is in the same
+    /// orientation as it was at the start.
+    fn edit_all_directions<F>(&mut self, mut edit_fn: F)
+    where
+        F: FnMut(&mut [T]),
+    {
+        for _ in 0..4 {
+            self.edit_rows(&mut edit_fn);
+            self.rotate();
+        }
+    }
+
+    /// Calculate the index for `contents` for a cell at the given coordinates
+    fn i(&self, x: usize, y: usize) -> usize {
+        y * self.size + x
+    }
+
+    /// Get a copy of the item at the given coordinates
+    fn item_at(&self, x: usize, y: usize) -> T {
+        self.contents[self.i(x, y)]
+    }
+
+    /// Set the value at the given coordinates to the new value
+    fn set(&mut self, x: usize, y: usize, val: T) {
+        let i = self.i(x, y);
+        self.contents[i] = val;
+    }
+
+    /// Rotate the whole grid in-place counterclockwise
+    ///
+    /// Shamelessly stolen from https://afteracademy.com/blog/rotate-matrix/
+    pub fn rotate(&mut self) {
+        let n = self.size;
+        for layer in 0..self.size / 2 {
+            let low = layer;
+            let high = n - 1 - layer;
+            for i in low..high {
+                let temp = self.item_at(low, i);
+                self.set(low, i, self.item_at(n - 1 - i, low));
+                self.set(n - 1 - i, low, self.item_at(n - 1 - low, n - 1 - i));
+                self.set(n - 1 - low, n - 1 - i, self.item_at(i, n - 1 - low));
+                self.set(i, n - 1 - low, temp);
+            }
+        }
+    }
+}
+
+impl<T: Copy + Display> Display for Grid<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        for row in self.contents.chunks_exact(self.size) {
+            for item in row {
+                write!(f, " {item}")?;
             }
             writeln!(f)?;
         }
+
         Ok(())
     }
 }
 
+impl Display for VisibilityMarker {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        if self.is_visible { 'Y' } else { 'n' }.fmt(f)
+    }
+}
+
+impl Display for VisibilityScore {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{:7}", self.score)
+    }
+}
+
 #[cfg(test)]
-crate::test_helpers::test_short_input_for_day!(8, "21");
+crate::test_helpers::test_short_input_for_day!(8, "21", "8");
