@@ -74,7 +74,7 @@ impl Ring {
             self.hash_set.insert(*c);
         }
 
-        return true;
+        true
     }
 }
 

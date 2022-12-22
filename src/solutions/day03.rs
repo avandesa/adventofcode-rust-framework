@@ -41,9 +41,9 @@ impl Item {
 
     fn priority(&self) -> u8 {
         if self.0.is_ascii_lowercase() {
-            self.0 as u8 - 'a' as u8 + 1
+            self.0 as u8 - b'a' + 1
         } else {
-            self.0 as u8 - 'A' as u8 + 27
+            self.0 as u8 - b'A' + 27
         }
     }
 }
@@ -85,7 +85,7 @@ impl Rucksack {
             .left
             .0
             .intersection(&self.right.0)
-            .nth(0)
+            .next()
             .expect("at least one duplicate")
     }
 
@@ -95,7 +95,7 @@ impl Rucksack {
             .copied()
             .collect::<HashSet<_>>()
             .intersection(&c.total)
-            .nth(0)
+            .next()
             .expect("at least one duplicate")
     }
 }

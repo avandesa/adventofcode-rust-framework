@@ -193,8 +193,8 @@ impl TerminalLine {
         let matches = LINE_REGEXES_NOCAPTURE.matches(line);
         let first_match_idx = matches
             .iter()
-            .nth(0)
-            .expect(&format!("at least one match in line '{line}'"));
+            .next()
+            .unwrap_or_else(|| panic!("at least one match in line '{line}'"));
         match first_match_idx {
             0 => {
                 let cd_regex = regex!(r#"^\$ cd (?:(?P<up>\.\.)|(?P<dir>\w+|/))$"#);

@@ -8,7 +8,7 @@ pub struct Day05 {
 
 impl PuzzleSolver for Day05 {
     fn with_input(input: String) -> Self {
-        let num_stacks = (input.lines().nth(0).unwrap().len() + 1) / 4;
+        let num_stacks = (input.lines().next().unwrap().len() + 1) / 4;
         let mut starting_stacks = Stacks::new(num_stacks);
 
         let (stack_lines, action_lines) = input.split_once("\n\n").unwrap();
@@ -23,7 +23,7 @@ impl PuzzleSolver for Day05 {
                 .captures_iter(line)
                 .map(|cap| {
                     cap.name("crate")
-                        .map(|m| m.as_str().chars().nth(0).unwrap())
+                        .map(|m| m.as_str().chars().next().unwrap())
                 })
                 .enumerate()
                 .filter_map(|(stack_num, space)| space.map(|space| (stack_num, space)))

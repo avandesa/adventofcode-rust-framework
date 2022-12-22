@@ -118,7 +118,7 @@ struct Round {
 impl Round {
     fn from_line(line: &str) -> Self {
         Self {
-            opponent_choice: Choice::from_char(line.chars().nth(0).unwrap()),
+            opponent_choice: Choice::from_char(line.chars().next().unwrap()),
             my_choice: Choice::from_char(line.chars().nth(2).unwrap()),
             desired_outcome: MatchResult::from_char(line.chars().nth(2).unwrap()),
         }
